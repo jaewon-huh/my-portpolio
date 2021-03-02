@@ -19,5 +19,5 @@ from django.urls import include,path
 urlpatterns = [
     path('blog/', include('blog.urls')),
     path('admin/', admin.site.urls),
-    path('', include('single_pages.urls')),  #' ' 안에 공백있으면 에러! 
+    path('', include('single_pages.urls')),  #' ' 안에 공백있으면 에러!
 ]
