@@ -89,7 +89,7 @@
       <div class="row">
           <div class ="col-md-8 col-lg-9">
             <h1>Blog</h1>
-            {% for p in post_list %}    #사소한 { % for ~ % } 공백 잘못쓰는거에도 코드가 죽는다 조심
+            {% for p in post_list %}   <!-- 사소한 공백하나에도 코드 죽음  조심 -->
             <!-- Blog Post -->
             <div class="card mb-4">
               <img class="card-img-top" src="http://placehold.it/750x300" alt="Card image cap">
@@ -167,7 +167,7 @@
 
           </div>
       </div>
-  </div>
+    </div>
    <!-- Footer -->
    <footer class="py-5 bg-dark">
     <div class="container">
