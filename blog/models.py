@@ -6,6 +6,7 @@ class Post(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)  #처음 생성시간 = 현재
     updated_at = models.DateTimeField(auto_now=True)      #수정시간 = 현재
+    head_image = models.ImageField(upload_to='blog/images/%Y/%m/%d/', blank=True)  #이미지 업로드
     #author: 추후 작성예정
 
     def __str__(self):
