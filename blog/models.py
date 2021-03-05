@@ -1,5 +1,5 @@
 from django.db import models
-
+import os
 class Post(models.Model):
     title =models.CharField(max_length=30)
     content = models.TextField()
@@ -14,4 +14,8 @@ class Post(models.Model):
         return f'[{self.pk}]{self.title}'
     def get_absolute_url(self):
         return f'/blog/{self.pk}/'
+    def get_file_name(self):                #첨부파일 파일명 나타내기
+        return os.path.basename(self.file_upload.name)
+    def get_file_ext(self):                 #첨부파일의 확장자
+        return self.get_file_name().split('.')[-1]
 # Create your models here.

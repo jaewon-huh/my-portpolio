@@ -16,7 +16,8 @@
   <!-- 장고에서 정적 파일사용 href="{% static '파일위치' %}?
   <!-- Custom styles for this template -->
   <link rel="stylesheet" href="{% static 'blog/css/blog-post.css' %}" media="screen">
-
+  <!-- Font awesome-->
+  <script src="https://kit.fontawesome.com/4f5b3a3ffe.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
@@ -84,6 +85,22 @@
 
         <!-- Post Content -->
         <p>{{ post.content}}</p>
+
+        {% if post.file_upload %}
+          <a href="{{ post.file_upload.url }}" class="btn btn-outline-dark" role="button">
+            Download:
+            {% if post.get_file_ext == 'csv' %}
+              <i class="fas fa-file-csv"></i>
+            {% elif post.get_file_ext == 'xls' or post.get_file_ext == 'xlsx' %}
+              <i class="fas fa-file-excel"></i>
+            {% elif post.get_file_ext == 'doc' or post.get_file_ext == 'docx' %}
+              <i class="fas fa-file-word"></i>
+            {% else %}
+              <i class="fas fa-file"></i>
+            {% endif %}
+            {{ post.get_file_name }}
+          </a>
+        {% endif %}
         <hr>
 
         <!-- Comments Form -->
