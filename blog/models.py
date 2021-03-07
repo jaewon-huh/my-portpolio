@@ -3,6 +3,7 @@ import os
 class Post(models.Model):
     title =models.CharField(max_length=30)
     content = models.TextField()
+    hook_text = models.CharField(max_length=100, blank=True) #포스트 요약문 필드
 
     created_at = models.DateTimeField(auto_now_add=True)  #처음 생성시간 = 현재
     updated_at = models.DateTimeField(auto_now=True)      #수정시간 = 현재
