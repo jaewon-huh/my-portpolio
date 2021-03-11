@@ -1,7 +1,8 @@
 from django.db import models
+from django.contrib.auth.models import User
 import os
 class Post(models.Model):
-    title =models.CharField(max_length=30)
+    title = models.CharField(max_length=30)
     content = models.TextField()
     hook_text = models.CharField(max_length=100, blank=True) #포스트 요약문 필드
 
@@ -9,10 +10,10 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)      #수정시간 = 현재
     head_image = models.ImageField(upload_to='blog/images/%Y/%m/%d/', blank=True)  #이미지 업로드
     file_upload = models.FileField(upload_to='blog/files/%Y/%m/%d/', blank=True)  #파일 업로드
-    #author: 추후 작성예정
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'[{self.pk}]{self.title}'
+        return f'[{self.pk}]{self.title} :: {self.author}'
     def get_absolute_url(self):
         return f'/blog/{self.pk}/'
     def get_file_name(self):                #첨부파일 파일명 나타내기
