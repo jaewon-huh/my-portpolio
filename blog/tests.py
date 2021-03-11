@@ -1,10 +1,14 @@
 from django.test import TestCase, Client
 from bs4 import BeautifulSoup
 from .models import Post
+from django.contrib.auth.models import User
+
 
 class TestView(TestCase):        #TestCase 상속받은 클래스 정의
     def setUp(self):
         self.client =Client()
+        self.user_trump = User.objects.create_user(username='trump',password='somepassword')
+        self.user_obama = User.objects.create_user(username='obama', password='somepassword')
 
     def navbar_test(self, soup): #soup 매개변수 BS로 요소 가져와서 테스트
         navbar = soup.nav
@@ -47,10 +51,12 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         post_001 = Post.objects.create(
             title='첫 번째 포스트입니다.',
             content='Hello World . We are the World.',
+            author=self.user_trump
         )
         post_002 = Post.objects.create(
             title='두 번째 포스트입니다.',
             content='1등이 전부는 아니잖아요.ㅎ',
+            author=self.user_obama
         )
         self.assertEqual(Post.objects.count(), 2)
         # 3.2 포스트 목록 페이지를 새로고침 했을때
@@ -64,11 +70,15 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         # 3.4 '아직 게시물이 없습니다'라는 문구는 더이상 보이지 않는다.
         self.assertNotIn('아직 게시물이 없습니다', main_area.text)
 
+        self.assertIn(self.user_trump.username.upper(), main_area.text)
+        self.assertIn(self.user_obama.username.upper(), main_area.text)
+
     def test_post_detail(self):
         # 1.   포스트가 하나 있다.
         post_001 = Post.objects.create(
             title='첫 번째 포스트입니다.',
             content='Hello World . We are the World.',
+            author=self.user_trump
         )
         # 1.1  그 포스트의 url은 'blog/1/' 이다.
         self.assertEqual(post_001.get_absolute_url(), '/blog/1/')
@@ -93,7 +103,7 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.assertIn(post_001.title, post_area.text)
 
         # 2.5  첫 번째 post의 작성자(author)가 post-area에 있다.
-        # 아직 작성 불가
+        self.assertIn(self.user_trump.username.upper(), post_area.text)
 
         # 2.6  첫 번째 post의 content가 post-area에 있다.
         self.assertIn(post_001.content, post_area.text)
