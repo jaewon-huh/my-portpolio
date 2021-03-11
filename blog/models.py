@@ -10,7 +10,7 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)      #수정시간 = 현재
     head_image = models.ImageField(upload_to='blog/images/%Y/%m/%d/', blank=True)  #이미지 업로드
     file_upload = models.FileField(upload_to='blog/files/%Y/%m/%d/', blank=True)  #파일 업로드
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User,null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f'[{self.pk}]{self.title} :: {self.author}'
