@@ -45,12 +45,13 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         about_me_btn = navbar.find('a', text='About Me')
         self.assertEqual(about_me_btn.attrs['href'], '/about_me/')
 
-    def category_card_test(self, soup):
+    def category_card_test(self, soup): #카테고리 카드가 잘 만들어 졌나 테스트
         categories_card = soup.find('div', id='categories-card')    #id가 categories-card 인 div 찾기
         self.assertIn('Categories', categories_card.text)           # 그 div text 중 Categories 문구 찾기
         self.assertIn(f'{self.category_programming.name} ({self.category_programming.post_set.count()})', categories_card.text)  # 모든 카테고리가 제대로 출력?
         self.assertIn(f'{self.category_music.name} ({self.category_music.post_set.count()})', categories_card.text)
-        self.assertIn(f'미분류 (1)', categories_card.text) # 카테고리가 없는 포스트 개수가 미분류 항목 옆 괄호에 써 있는지
+        self.assertIn(f'미분류 (1)', categories_card.text)
+         # 카테고리가 없는 포스트 개수가 미분류 항목 옆 괄호에 써 있는지
 
     def test_post_list(self):
         # 포스트가 있는 경우
@@ -90,19 +91,13 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.assertIn('아직 게시물이 없습니다', main_area.text)
 
 
-def test_post_detail(self):
-        # 1.   포스트가 하나 있다.
-        post_001 = Post.objects.create(
-            title='첫 번째 포스트입니다.',
-            content='Hello World . We are the World.',
-            author=self.user_trump
-        )
+    def test_post_detail(self):
         # 1.1  그 포스트의 url은 'blog/1/' 이다.
-        self.assertEqual(post_001.get_absolute_url(), '/blog/1/')
+        self.assertEqual(self.post_001.get_absolute_url(), '/blog/1/')
 
         # 2.   첫 번째 post의 detail 페이지 테스트
         # 2.1  첫 번째 post url로 접근하면 정상적으로 작동한다. (status code: 200)
-        response = self.client.get(post_001.get_absolute_url())
+        response = self.client.get(self.post_001.get_absolute_url())
         self.assertEqual(response.status_code, 200)
         soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -111,18 +106,21 @@ def test_post_detail(self):
         #self.assertIn('Blog', navbar.text)
         #self.assertIn('About Me', navbar.text)
         self.navbar_test(soup)
+
+        self.category_card_test(soup)
         # 2.3  첫 번째 post의 title이 웹 브라우저 탭 타이틀에 들어있다.
-        self.assertIn(post_001.title, soup.title.text)
+        self.assertIn(self.post_001.title, soup.title.text)
 
         # 2.4  첫 번째 post의 title이 post-area에 있다.
         main_area = soup.find('div', id='main-area')
         post_area = main_area.find('div', id='post-area')
-        self.assertIn(post_001.title, post_area.text)
+        self.assertIn(self.post_001.title, post_area.text)
+        self.assertIn(self.category_programming.name, post_area.text)
 
         # 2.5  첫 번째 post의 작성자(author)가 post-area에 있다.
         self.assertIn(self.user_trump.username.upper(), post_area.text)
 
         # 2.6  첫 번째 post의 content가 post-area에 있다.
-        self.assertIn(post_001.content, post_area.text)
+        self.assertIn(self.post_001.content, post_area.text)
 
 # Create your tests here.
