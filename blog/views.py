@@ -1,10 +1,17 @@
 #from django.shortcuts import render
-from django.views.generic import ListView,DetailView  #ListView 클래스로 포스트 목록페이지 만들기 +DetailView
-from .models import Post #models.py에 정의된 Post모델을 임포트
+from django.views.generic import ListView, DetailView  #ListView 클래스로 포스트 목록페이지 만들기 +DetailView
+from .models import Post, Category  #models.py에 정의된 Post모델을 임포트
 
 class PostList(ListView):
     model = Post
-    ordering ='-pk'
+    ordering = '-pk'
+
+    def get_context_data(self, **kwargs):
+        context = super(PostList, self).get_context_data()
+        context['categories'] = Category.objects.all()
+        context['no_category_post_count'] = Post.objects.filter(category=None).count()
+        return context
+
    #template_name = 'blog/post_list.html'
 #아래는 FBV방식
 #def index(request):
