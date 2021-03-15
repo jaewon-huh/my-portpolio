@@ -9,6 +9,9 @@ class Category(models.Model):    #클래스 만든 후에는 def 로 정의
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return f'/blog/category/{self.slug}/'
+
     class Meta:        #admin 페이지에서 Categorys라고 표기, 복수형 직접지정
         verbose_name_plural = 'Categories'
 
