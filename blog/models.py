@@ -15,6 +15,17 @@ class Category(models.Model):    #클래스 만든 후에는 def 로 정의
     class Meta:        #admin 페이지에서 Categorys라고 표기, 복수형 직접지정
         verbose_name_plural = 'Categories'
 
+class Tag(models.Model):    #Tag 모델은 Category 모델과 거의 비슷
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=200, unique=True, allow_unicode=True)
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return f'/blog/tag/{self.slug}/'
+
+
 
 class Post(models.Model):
     title = models.CharField(max_length=30)
@@ -31,6 +42,8 @@ class Post(models.Model):
     #on_delete : User 삭제되도 포스트 삭제되지 않고 user 필드만 null이 되도록
 
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.SET_NULL)
+
+    tags = models.ManyToManyField(Tag,blank=True) #tag 필드는 다대다 ManyToManyField
 
     def __str__(self):
         return f'[{self.pk}]{self.title} :: {self.author}'
