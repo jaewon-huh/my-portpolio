@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic import ListView, DetailView  #ListView 클래스로 포스트 목록페이지 만들기 +DetailView
-from .models import Post, Category  #models.py에 정의된 Post모델을 임포트
+from .models import Post, Category , Tag #models.py에 정의된 Post모델을 임포트
 
 class PostList(ListView):
     model = Post
@@ -28,6 +28,20 @@ def category_page(request, slug):
             'categories': Category.objects.all(),
             'no_category_post_count': Post.objects.filter(category=None).count(),
             'category': category,
+        }
+    )
+def tag_page(request, slug):
+        tag = Tag.objects.get(slug=slug)
+        post_list = tag.post_set.all()
+
+        return render(
+        request,
+        'blog/post_list.html',
+        {
+            'post_list': post_list,
+            'categories': Category.objects.all(),
+            'no_category_post_count': Post.objects.filter(category=None).count(),
+            'tag': tag,
         }
     )
 
