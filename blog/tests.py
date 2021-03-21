@@ -39,6 +39,33 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.post_003.tags.add(self.tag_python)
         self.post_003.tags.add(self.tag_python_kor)
 
+    def test_create_post(self):
+        # 로그인하지 않으면 status code가 200 이면 안된다!
+        response = self.client.get('/blog/create_post/')
+        self.assertNotEqual(response.status_code, 200)
+
+        # 로그인을 한다
+        self.client.login(username='trump', password='somepassword')
+
+        response = self.client.get('/blog/create_post/')
+        self.assertEqual(response.status_code, 200)
+        soup =BeautifulSoup(response.content, 'html.parser')
+
+        self.assertEqual('Create Post - Blog', soup.title.text)
+        main_area = soup.find('div', id='main-area')
+        self.assertIn('Create New Post', main_area.text)
+
+        self.client.post(           # # self.client.post()함수는 첫번째 인수인 해당경로로 두번째 인수인 딕셔너리 정보를 post 방식으르 보낸다.
+            '/blog/create_post/',
+            {
+                'title' : 'post form 만들기',
+                'content' : "post페이지",
+            }
+        )
+        last_post = Post.objects.last()  #마지막에 작성된 post 레코드를 last_post에 저장
+        self.assertEqual(last_post.title, 'post form 만들기')
+        self.assertEqual(last_post.author.username, 'trump')
+
     def navbar_test(self, soup): #soup 매개변수 BS로 요소 가져와서 테스트
         navbar = soup.nav
         self.assertIn('Blog', navbar.text)

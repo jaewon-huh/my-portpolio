@@ -1,5 +1,6 @@
-from django.shortcuts import render
-from django.views.generic import ListView, DetailView  #ListView 클래스로 포스트 목록페이지 만들기 +DetailView
+from django.shortcuts import render ,redirect
+from django.views.generic import ListView, DetailView, CreateView #ListView 클래스로 포스트 목록페이지 만들기 +DetailView
+from django.contrib.auth.mixins import LoginRequiredMixin #로그인 했을때만 페이지가 보이게
 from .models import Post, Category , Tag #models.py에 정의된 Post모델을 임포트
 
 class PostList(ListView):
@@ -44,6 +45,18 @@ def tag_page(request, slug):
             'tag': tag,
         }
     )
+class PostCreate(LoginRequiredMixin, CreateView):
+    model = Post
+    fields = ['title','hook_text','content','head_image','file_upload','category']
+
+    def form_valid(self, form):
+        current_user = self.request.user
+        if current_user.is_authenticated:
+            form.instance.author = current_user
+            return super(PostCreate, self).form_valid(form)
+        else:
+            return redirect('/blog/')
+
 
    #template_name = 'blog/post_list.html'
 #아래는 FBV방식
