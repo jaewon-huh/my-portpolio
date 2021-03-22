@@ -7,6 +7,8 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.client =Client()
         self.user_trump = User.objects.create_user(username='trump',password='somepassword')
         self.user_obama = User.objects.create_user(username='obama', password='somepassword')
+        self.user_obama.is_staff = True #오바마 스태프 권한 부여
+        self.user_obama.save()
 
         self.category_programming = Category.objects.create(name='programming', slug='programming')
         self.category_music = Category.objects.create(name='music', slug='music')
@@ -44,9 +46,13 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         response = self.client.get('/blog/create_post/')
         self.assertNotEqual(response.status_code, 200)
 
-        # 로그인을 한다
+        #staff가 아닌 trump가 로그인을 한다.
         self.client.login(username='trump', password='somepassword')
+        response = self.client.get('/blog/create_post/')
+        self.assertNotEqual(response.status_code, 200)
 
+        #staff인 obama가 로그인 한다.
+        self.client.login(username='obama', password='somepassword')
         response = self.client.get('/blog/create_post/')
         self.assertEqual(response.status_code, 200)
         soup =BeautifulSoup(response.content, 'html.parser')
@@ -64,7 +70,7 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         )
         last_post = Post.objects.last()  #마지막에 작성된 post 레코드를 last_post에 저장
         self.assertEqual(last_post.title, 'post form 만들기')
-        self.assertEqual(last_post.author.username, 'trump')
+        self.assertEqual(last_post.author.username, 'obama')
 
     def navbar_test(self, soup): #soup 매개변수 BS로 요소 가져와서 테스트
         navbar = soup.nav
