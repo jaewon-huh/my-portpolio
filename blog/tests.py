@@ -13,7 +13,7 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.category_programming = Category.objects.create(name='programming', slug='programming')
         self.category_music = Category.objects.create(name='music', slug='music')
 
-        self.tag_python_kor = Tag.objects.create(name='파이선-공부', slug ='파이썬-공부')
+        self.tag_python_kor = Tag.objects.create(name='파이썬-공부', slug ='파이썬-공부')
         self.tag_python = Tag.objects.create(name='python', slug='python')
         self.tag_hello = Tag.objects.create(name='hello',slug='hello')
 
@@ -61,17 +61,25 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         main_area = soup.find('div', id='main-area')
         self.assertIn('Create New Post', main_area.text)
 
+        tag_str_input = main_area.find('input', id='id_tags_str')
+        self.assertTrue(tag_str_input)
+
         self.client.post(           # # self.client.post()함수는 첫번째 인수인 해당경로로 두번째 인수인 딕셔너리 정보를 post 방식으르 보낸다.
             '/blog/create_post/',
             {
-                'title' : 'post form 만들기',
-                'content' : "post페이지",
+                'title': 'post form 만들기',
+                'content': "post페이지",
+                'tags_str': 'new tag; 한글 태그, python',
             }
         )
         last_post = Post.objects.last()  #마지막에 작성된 post 레코드를 last_post에 저장
         self.assertEqual(last_post.title, 'post form 만들기')
         self.assertEqual(last_post.author.username, 'obama')
 
+        self.assertEqual(last_post.tags.count(), 3)
+        self.assertTrue(Tag.objects.get(name='new tag'))
+        self.assertTrue(Tag.objects.get(name='한글 태그'))
+        self.assertEqual(Tag.objects.count(),5)
     def navbar_test(self, soup): #soup 매개변수 BS로 요소 가져와서 테스트
         navbar = soup.nav
         self.assertIn('Blog', navbar.text)
