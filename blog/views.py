@@ -1,8 +1,8 @@
 from django.shortcuts import render ,redirect
-from django.views.generic import ListView, DetailView, CreateView #ListView 클래스로 포스트 목록페이지 만들기 +DetailView
+from django.views.generic import ListView, DetailView, CreateView , UpdateView#ListView 클래스로 포스트 목록페이지 만들기 +DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin  #로그인 했을때만 페이지가 보이게
 from .models import Post, Category , Tag #models.py에 정의된 Post모델을 임포트
-
+from django.core.exceptions import PermissionDenied
 class PostList(ListView):
     model = Post
     ordering = '-pk'
@@ -59,6 +59,19 @@ class PostCreate(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             return super(PostCreate, self).form_valid(form)
         else:
             return redirect('/blog/')
+
+class PostUpdate(LoginRequiredMixin, UpdateView):
+    model = Post
+    fields = ['title','hook_text','content','head_image','file_upload','category', 'tags']
+
+    template_name = 'blog/post_update_form.html' # 원하는 html 파일을 템플릿 파일로 설정
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user == self.get_object().author:
+            return super(PostUpdate,self).dispatch(request,*args,**kwargs)  #방문자가 로그인, 작성자인 경우만 dispatch() 확인
+        else:
+            raise PermissionDenied
+
 
 
    #template_name = 'blog/post_list.html'
