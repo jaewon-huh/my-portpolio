@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from markdownx.models import MarkdownxField
+from markdownx.utils import markdown
 import os
 
 class Category(models.Model):    #클래스 만든 후에는 def 로 정의
@@ -29,7 +31,7 @@ class Tag(models.Model):    #Tag 모델은 Category 모델과 거의 비슷
 
 class Post(models.Model):
     title = models.CharField(max_length=30)
-    content = models.TextField()
+    content = MarkdownxField()
     hook_text = models.CharField(max_length=100, blank=True) #포스트 요약문 필드
 
     created_at = models.DateTimeField(auto_now_add=True)  #처음 생성시간 = 현재
@@ -53,6 +55,9 @@ class Post(models.Model):
         return os.path.basename(self.file_upload.name)
     def get_file_ext(self):                 #첨부파일의 확장자
         return self.get_file_name().split('.')[-1]
+
+    def get_content_markdown(self):
+        return markdown(self.content)    #Post의 conten를 마크다운화
 
 
 # Create your models here.
