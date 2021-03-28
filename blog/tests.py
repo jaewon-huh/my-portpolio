@@ -13,7 +13,7 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.category_programming = Category.objects.create(name='programming', slug='programming')
         self.category_music = Category.objects.create(name='music', slug='music')
 
-        self.tag_python_kor = Tag.objects.create(name='파이썬-공부', slug ='파이썬-공부')
+        self.tag_python_kor = Tag.objects.create(name='파이썬 공부', slug='파이썬-공부')
         self.tag_python = Tag.objects.create(name='python', slug='python')
         self.tag_hello = Tag.objects.create(name='hello',slug='hello')
 
@@ -79,7 +79,7 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.assertEqual(last_post.tags.count(), 3)
         self.assertTrue(Tag.objects.get(name='new tag'))
         self.assertTrue(Tag.objects.get(name='한글 태그'))
-        self.assertEqual(Tag.objects.count(),5)
+        self.assertEqual(Tag.objects.count(),5)  #데이터 베이스엔 5개
     def navbar_test(self, soup): #soup 매개변수 BS로 요소 가져와서 테스트
         navbar = soup.nav
         self.assertIn('Blog', navbar.text)
@@ -249,12 +249,17 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         main_area = soup.find('div', id='main-area')
         self.assertIn('Edit Post', main_area.text)
 
+        tag_str_input = main_area.find('input', id='id_tags_str')
+        self.assertTrue(tag_str_input)
+        self.assertIn('파이썬 공부;python', tag_str_input.attrs['value'])
+
         response = self.client.post(
             update_post_url,
             {
                 'title': '세번째 포스트를 수정했습니다. ',
                 'content': '안녕 세계? 우리는 하나!',
                 'category': self.category_music.pk,  #카테고리는 foreignkey 라서 .pk로 pk 명시
+                'tags_str': '파이썬 공부; 한글 태그 , some tag'
             },
             follow=True
         )
@@ -263,5 +268,10 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.assertIn('세번째 포스트를 수정했습니다.', main_area.text)
         self.assertIn('안녕 세계? 우리는 하나!', main_area.text)
         self.assertIn(self.category_music.name, main_area.text)
+        self.assertIn('파이썬 공부', main_area.text)
+        self.assertIn('한글 태그', main_area.text)
+        self.assertIn('some tag', main_area.text)
+        self.assertNotIn('python', main_area.text)
+
 
 # Create your tests here.

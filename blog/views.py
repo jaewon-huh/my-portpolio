@@ -86,13 +86,41 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
 
     template_name = 'blog/post_update_form.html' # 원하는 html 파일을 템플릿 파일로 설정
 
+    def get_context_data(self, **kwargs):   #템플릿으로 추가 인자를 넘기기 get_context_data
+        context = super(PostUpdate, self).get_context_data()
+        if self.object.tags.exists():       #태그가 있다면
+            tags_str_list = list()          #리스트 생성
+            for t in self.object.tags.all():        #태그들에 대해서
+                tags_str_list.append(t.name)        #태그 이름들을 리스트에 넣음
+            context['tags_str_default'] = ';'.join(tags_str_list)                #인자 정의 = 태그리스트를 ;로 구분하고 하나로 결합
+
+        return context
+
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user == self.get_object().author:
             return super(PostUpdate,self).dispatch(request,*args,**kwargs)  #방문자가 로그인, 작성자인 경우만 dispatch() 확인
         else:
             raise PermissionDenied
 
+    def form_valid(self, form):
+        response = super(PostUpdate, self).form_valid(form)
+        self.object.tags.clear()
 
+        tags_str = self.request.POST.get('tags_str')
+        if tags_str:
+            tags_str = tags_str.strip()
+            tags_str = tags_str.replace(',', ';')
+            tags_list = tags_str.split(';')
+
+            for t in tags_list:
+                t = t.strip()
+                tag, is_tag_created = Tag.objects.get_or_create(name=t)
+                if is_tag_created:
+                    tag.slug = slugify(t, allow_unicode=True)
+                    tag.save()
+                self.object.tags.add(tag)
+
+        return response
 
    #template_name = 'blog/post_list.html'
 #아래는 FBV방식
