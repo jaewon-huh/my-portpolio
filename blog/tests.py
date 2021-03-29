@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from bs4 import BeautifulSoup
-from .models import Post, Category , Tag
+from .models import Post, Category , Tag, Comment
 from django.contrib.auth.models import User
 class TestView(TestCase):        #TestCase 상속받은 클래스 정의
     def setUp(self):
@@ -41,6 +41,12 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.post_003.tags.add(self.tag_python)
         self.post_003.tags.add(self.tag_python_kor)
 
+        self.comment_001 = Comment.objects.create(
+            post=self.post_001,
+            author=self.user_obama,
+            content='첫번째 댓글입니다.',
+        )
+
     def test_create_post(self):
         # 로그인하지 않으면 status code가 200 이면 안된다!
         response = self.client.get('/blog/create_post/')
@@ -80,6 +86,60 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.assertTrue(Tag.objects.get(name='new tag'))
         self.assertTrue(Tag.objects.get(name='한글 태그'))
         self.assertEqual(Tag.objects.count(),5)  #데이터 베이스엔 5개
+
+    def test_update_post(self):
+        update_post_url = f'/blog/update_post/{self.post_003.pk}/'  # url 형태는 /blog/update_post/포스트의 pk/
+
+        # 로그인 하지 않은 경우
+        response = self.client.get(update_post_url)
+        self.assertNotEqual(response.status_code, 200)
+
+        # 로그인은 했지만, 작성자가 아닌 경우
+        self.assertNotEqual(self.post_003.author, self.user_trump)
+        self.client.login(
+            username=self.user_trump.username,
+            password='somepassword'
+        )
+        response = self.client.get(update_post_url)
+        self.assertEqual(response.status_code, 403)  # trump 권한없음 오류
+
+        # 작성자(obama)가 접근하는 경우
+        self.client.login(
+            username=self.post_003.author.username,
+            password='somepassword'
+        )
+        response = self.client.get(update_post_url)
+        self.assertEqual(response.status_code, 200)
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        self.assertEqual('Edit Post - Blog', soup.title.text)
+        main_area = soup.find('div', id='main-area')
+        self.assertIn('Edit Post', main_area.text)
+
+        tag_str_input = main_area.find('input', id='id_tags_str')
+        self.assertTrue(tag_str_input)
+        self.assertIn('파이썬 공부;python', tag_str_input.attrs['value'])
+
+        response = self.client.post(
+            update_post_url,
+            {
+                'title': '세번째 포스트를 수정했습니다. ',
+                'content': '안녕 세계? 우리는 하나!',
+                'category': self.category_music.pk,  # 카테고리는 foreignkey 라서 .pk로 pk 명시
+                'tags_str': '파이썬 공부; 한글 태그 , some tag'
+            },
+            follow=True
+        )
+        soup = BeautifulSoup(response.content, 'html.parser')
+        main_area = soup.find('div', id='main-area')
+        self.assertIn('세번째 포스트를 수정했습니다.', main_area.text)
+        self.assertIn('안녕 세계? 우리는 하나!', main_area.text)
+        self.assertIn(self.category_music.name, main_area.text)
+        self.assertIn('파이썬 공부', main_area.text)
+        self.assertIn('한글 태그', main_area.text)
+        self.assertIn('some tag', main_area.text)
+        self.assertNotIn('python', main_area.text)
+
     def navbar_test(self, soup): #soup 매개변수 BS로 요소 가져와서 테스트
         navbar = soup.nav
         self.assertIn('Blog', navbar.text)
@@ -188,6 +248,12 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.assertNotIn(self.tag_python.name, post_area.text)
         self.assertNotIn(self.tag_python_kor.name, post_area.text)
 
+        # comment area 테스트
+        comments_area = soup.find('div', id='comment-area')
+        comment_001_area = comments_area.find('div', id='comment-1')
+        self.assertIn(self.comment_001.author.username, comment_001_area.text)
+        self.assertIn(self.comment_001.content, comment_001_area.text)
+
     def test_category_page(self):
         response = self.client.get(self.category_programming.get_absolute_url())
         self.assertEqual(response.status_code, 200)
@@ -220,58 +286,6 @@ class TestView(TestCase):        #TestCase 상속받은 클래스 정의
         self.assertNotIn(self.post_002.title, main_area.text)
         self.assertNotIn(self.post_003.title, main_area.text)
 
-    def test_update_post(self):
-        update_post_url = f'/blog/update_post/{self.post_003.pk}/' #url 형태는 /blog/update_post/포스트의 pk/
-
-        #로그인 하지 않은 경우
-        response = self.client.get(update_post_url)
-        self.assertNotEqual(response.status_code, 200)
-
-        # 로그인은 했지만, 작성자가 아닌 경우
-        self.assertNotEqual(self.post_003.author, self.user_trump)
-        self.client.login(
-            username=self.user_trump.username,
-            password='somepassword'
-        )
-        response = self.client.get(update_post_url)
-        self.assertEqual(response.status_code, 403)  #trump 권한없음 오류
-
-        # 작성자(obama)가 접근하는 경우
-        self.client.login(
-            username=self.post_003.author.username,
-            password='somepassword'
-        )
-        response = self.client.get(update_post_url)
-        self.assertEqual(response.status_code, 200)
-        soup = BeautifulSoup(response.content, 'html.parser')
-
-        self.assertEqual('Edit Post - Blog', soup.title.text)
-        main_area = soup.find('div', id='main-area')
-        self.assertIn('Edit Post', main_area.text)
-
-        tag_str_input = main_area.find('input', id='id_tags_str')
-        self.assertTrue(tag_str_input)
-        self.assertIn('파이썬 공부;python', tag_str_input.attrs['value'])
-
-        response = self.client.post(
-            update_post_url,
-            {
-                'title': '세번째 포스트를 수정했습니다. ',
-                'content': '안녕 세계? 우리는 하나!',
-                'category': self.category_music.pk,  #카테고리는 foreignkey 라서 .pk로 pk 명시
-                'tags_str': '파이썬 공부; 한글 태그 , some tag'
-            },
-            follow=True
-        )
-        soup = BeautifulSoup(response.content, 'html.parser')
-        main_area = soup.find('div', id='main-area')
-        self.assertIn('세번째 포스트를 수정했습니다.', main_area.text)
-        self.assertIn('안녕 세계? 우리는 하나!', main_area.text)
-        self.assertIn(self.category_music.name, main_area.text)
-        self.assertIn('파이썬 공부', main_area.text)
-        self.assertIn('한글 태그', main_area.text)
-        self.assertIn('some tag', main_area.text)
-        self.assertNotIn('python', main_area.text)
 
 
 # Create your tests here.
