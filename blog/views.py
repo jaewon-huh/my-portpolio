@@ -2,8 +2,10 @@ from django.shortcuts import render ,redirect
 from django.views.generic import ListView, DetailView, CreateView , UpdateView#ListView 클래스로 포스트 목록페이지 만들기 +DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin  #로그인 했을때만 페이지가 보이게
 from .models import Post, Category , Tag #models.py에 정의된 Post모델을 임포트
+from .forms import CommentForm
 from django.core.exceptions import PermissionDenied
 from django.utils.text import slugify
+from django.shortcuts import get_object_or_404
 
 class PostList(ListView):
     model = Post
@@ -14,6 +16,18 @@ class PostList(ListView):
         context['categories'] = Category.objects.all()
         context['no_category_post_count'] = Post.objects.filter(category=None).count()
         return context
+
+class PostDetail(DetailView):
+    model = Post
+
+    def get_context_data(self, **kwargs):
+        context = super(PostDetail, self).get_context_data()
+        context['categories'] = Category.objects.all()
+        context['no_category_post_count'] = Post.objects.filter(category=None).count()
+        context['comment_form'] = CommentForm
+        return context
+
+
 
 def category_page(request, slug):
     if slug == 'no_category':
@@ -122,6 +136,25 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
 
         return response
 
+
+def new_comment(request, pk):
+    if request.user.is_authenticated:
+        post = get_object_or_404(Post, pk=pk)
+
+        if request.method == 'POST':
+            comment_form = CommentForm(request.POST)
+            if comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.post = post
+                comment.author = request.user
+                comment.save()
+                return redirect(comment.get_absolute_url())
+        else:
+            return redirect(post.get_absolute_url())
+    else:
+        raise PermissionDenied
+
+
    #template_name = 'blog/post_list.html'
 #아래는 FBV방식
 #def index(request):
@@ -144,13 +177,5 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
 #            'post' :post,
 #       }
 #        )
-class PostDetail(DetailView):
-    model = Post
-
-    def get_context_data(self, **kwargs):
-        context = super(PostDetail, self).get_context_data()
-        context['categories'] = Category.objects.all()
-        context['no_category_post_count'] = Post.objects.filter(category=None).count()
-        return context
 
     #render() : 요청이 들어오면 주소를 반환해준다
