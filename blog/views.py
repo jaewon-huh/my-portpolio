@@ -1,7 +1,7 @@
 from django.shortcuts import render ,redirect
 from django.views.generic import ListView, DetailView, CreateView , UpdateView#ListView 클래스로 포스트 목록페이지 만들기 +DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin  #로그인 했을때만 페이지가 보이게
-from .models import Post, Category , Tag #models.py에 정의된 Post모델을 임포트
+from .models import Post, Category, Tag, Comment #models.py에 정의된 Post모델을 임포트
 from .forms import CommentForm
 from django.core.exceptions import PermissionDenied
 from django.utils.text import slugify
@@ -153,6 +153,22 @@ def new_comment(request, pk):
             return redirect(post.get_absolute_url())
     else:
         raise PermissionDenied
+
+class CommentUpdate(LoginRequiredMixin, UpdateView):
+    model = Comment
+    form_class = CommentForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user == self.get_object().author:
+            return super(CommentUpdate, self).dispatch(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+
+
+
+
+
+
 
 
    #template_name = 'blog/post_list.html'
